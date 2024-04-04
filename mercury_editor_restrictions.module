@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * @file
+ * Contains Layout Paragraphs Restrictions module.
+ */
+
+/**
+ * Implements hook_preprocess_layout_paragraphs_builder().
+ */
+function mercury_editor_restrictions_preprocess_layout_paragraphs_builder(&$variables) {
+
+  $restrictions = \Drupal::moduleHandler()->invokeAll('mercury_editor_restrictions');
+  $layout = $variables['layout_paragraphs_layout'];
+  $variables['#attached']['drupalSettings']['lpBuilder']['restrictions'][$layout->id()] = $restrictions;
+  $variables['#attached']['library'][] = 'mercury_editor_restrictions/restrictions';
+
+}

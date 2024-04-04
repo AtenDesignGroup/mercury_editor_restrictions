@@ -1,0 +1,7 @@
+services:
+  mercury_editor_restrictions:
+    class: \Drupal\mercury_editor_restrictions\EventSubscriber\LayoutParagraphsRestrictions
+    arguments:
+      - '@messenger'
+    tags:
+      - { name: 'event_subscriber' }
