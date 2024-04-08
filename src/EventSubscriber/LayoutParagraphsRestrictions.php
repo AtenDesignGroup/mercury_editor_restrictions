@@ -147,6 +147,15 @@ class LayoutParagraphsRestrictions implements EventSubscriberInterface {
           continue;
         }
       }
+      if (!empty($restriction['settings']['_root'])) {
+        if ($region === '_root') {
+          $matching_restrictions[$restriction_key] = $restriction;
+        }
+        else {
+          continue;
+        }
+      }
+
       if ($match) {
         $matching_restrictions[$restriction_key] = $restriction;
       }
