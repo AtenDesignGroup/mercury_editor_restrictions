@@ -1,9 +1,8 @@
-(($, Drupal, debounce, dragula) => {
+(($, Drupal, debounce, dragula, once) => {
 
   Drupal.behaviors.layoutParagraphsRestrictions = {
     attach: function attach(context, settings) {
-      $('[data-lpb-id]')
-        .once('lpb-restrictions')
+      $(once('lpb-restrictions', '[data-lpb-id]'))
         .each((i, e) => {
           const lpbId = e.getAttribute('data-lpb-id');
           if (
@@ -41,4 +40,4 @@
     }
   }
 
-})(jQuery, Drupal, Drupal.debounce, dragula);
+})(jQuery, Drupal, Drupal.debounce, dragula, once);

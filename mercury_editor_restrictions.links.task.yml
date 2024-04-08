@@ -1,0 +1,4 @@
+mercury_editor_restrictions.settings:
+  route_name: mercury_editor_restrictions.settings
+  title: 'Restrictions Settings'
+  base_route: mercury_editor.settings

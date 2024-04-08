@@ -3,3 +3,4 @@ restrictions:
     js/restrictions.js: {}
   dependencies:
     - core/jquery
+    - core/once

@@ -1,0 +1,15 @@
+# Arbitrary name for the restrictions rule.
+cta_lists:
+  settings:
+    entity_types:
+      paragraph: cta_list
+    fields:
+      - field_content
+    # layouts:
+    #   - one_column
+    #   - two_column
+    # regions:
+    #   - content
+  allow_components:
+    - cta
+  # disallow_components:

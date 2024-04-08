@@ -1,0 +1,6 @@
+mercury_editor_restrictions.settings:
+  type: sequence
+  label: 'Mercury Editor Restrictions settings'
+  sequence:
+    type: object
+    label: 'Restrictions settings'

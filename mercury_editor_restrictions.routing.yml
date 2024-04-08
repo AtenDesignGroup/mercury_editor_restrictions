@@ -1,0 +1,7 @@
+mercury_editor_restrictions.settings:
+  path: '/admin/config/content/mercury-editor/restrictions'
+  defaults:
+    _form: '\Drupal\mercury_editor_restrictions\Form\MercuryEditorRestrictionsSettingsForm'
+    _title: 'Mercury Editor Restrictions Settings'
+  requirements:
+    _permission: 'administer site configuration'

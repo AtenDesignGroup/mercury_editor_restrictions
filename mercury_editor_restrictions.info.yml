@@ -1,7 +1,7 @@
-name: Layout Paragraphs Restrictions
-description: Provides an API for managing Layout Paragraphs restrictions.
+name: Mercury Editor Restrictions
+description: Provides an API for managing Mercury Editor restrictions.
 type: module
-core_version_requirement: ^8 || ^9
-package: Layout Paragraphs
+core_version_requirement: ^9 || ^10
+package: Mercury Editor
 dependencies:
-  - layout_paragraphs:layout_paragraphs
+  - mercury_editor:mercury_editor

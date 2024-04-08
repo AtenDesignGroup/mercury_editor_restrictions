@@ -2,9 +2,12 @@
 
 namespace Drupal\mercury_editor_restrictions\EventSubscriber;
 
+use Drupal\Core\Config\ConfigFactory;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Messenger\Messenger;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Drupal\layout_paragraphs\Event\LayoutParagraphsAllowedTypesEvent;
+use PSpell\Config;
 
 /**
  * Provides Layout Paragraphs Restrictions.
@@ -19,15 +22,27 @@ class LayoutParagraphsRestrictions implements EventSubscriberInterface {
   protected $messenger;
 
   /**
+   * An array of restriction rules.
+   *
+   * @var array
+   */
+  protected $restrictions;
+
+  /**
    * Constructor.
    *
    * We use dependency injection get Messenger.
    *
    * @param \Drupal\Core\Messenger\Messenger $messenger
    *   The messenger service.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory service.
    */
-  public function __construct(Messenger $messenger) {
+  public function __construct(Messenger $messenger, ConfigFactoryInterface $config_factory) {
     $this->messenger = $messenger;
+    $this->restrictions = $config_factory
+      ->get('mercury_editor_restrictions.settings')
+      ->get('restrictions');
   }
 
   /**
@@ -35,7 +50,7 @@ class LayoutParagraphsRestrictions implements EventSubscriberInterface {
    */
   public static function getSubscribedEvents() {
     return [
-      LayoutParagraphsAllowedTypesEvent::EVENT_NAME => 'typeRestrictions',
+      LayoutParagraphsAllowedTypesEvent::EVENT_NAME => ['typeRestrictions', -100],
     ];
   }
 
@@ -47,10 +62,23 @@ class LayoutParagraphsRestrictions implements EventSubscriberInterface {
    */
   public function typeRestrictions(LayoutParagraphsAllowedTypesEvent $event) {
 
-    $parent_uuid = $event->getParentUuid();
-    $types = $event->getTypes();
     $layout = $event->getLayout();
+    $parent_uuid = $event->getParentUuid();
+    if (!empty($parent_uuid)) {
+      $section = $layout->getLayoutSection($layout->getComponentByUuid($parent_uuid)->getEntity());
+      $parent_entity = $section->getEntity();
+      $parent_component_type = $parent_entity->bundle();
+      $layout_plugin_id = $section->getLayoutId();
+    }
+    $types = $event->getTypes();
+    $entity = $layout->getEntity();
+    $bundle = $entity->getEntityTypeId() . ':' . $entity->bundle();
     $region = $event->getRegion() ?? '_root';
+    $layout_region = !empty($layout_plugin_id) && !empty($region)
+      ? $layout_plugin_id . ':' . $region
+      : '';
+    $field_name = $layout->getFieldName();
+
     if ($parent_uuid) {
       $parent_component = $layout->getComponentByUuid($parent_uuid);
       $section = $layout->getLayoutSection($parent_component->getEntity());
@@ -61,31 +89,75 @@ class LayoutParagraphsRestrictions implements EventSubscriberInterface {
       $layout_id = '';
       $sibling_components = $layout->getRootComponents();
     }
-    $count = count($sibling_components);
 
-    $restrictions = \Drupal::moduleHandler()->invokeAll('mercury_editor_restrictions');
-
-    // Filter to matching layouts.
-    $restrictions = array_filter(
-      $restrictions,
-      function ($restrictions) use ($layout_id) {
-        return (self::restrictByProperty($restrictions['layouts'] ?? NULL, $layout_id));
+    $matching_restrictions = [];
+    foreach ($this->restrictions as $restriction_key => $restriction) {
+      $match = FALSE;
+      // Match against the bundle of the entity that contains the layout.
+      if (!empty($restriction['settings']['bundles'])) {
+        $bundles = [];
+        foreach ($restriction['settings']['bundles'] ?? [] as $entity => $entity_bundle) {
+          $bundles[] = $entity . ':' . $entity_bundle;
+        }
+        if (in_array($bundle, $bundles)) {
+          $match = TRUE;
+        }
+        else {
+          continue;
+        }
       }
-    );
-
-    // Filter to matching regions.
-    $restrictions = array_filter(
-      $restrictions,
-      function ($restrictions) use ($region) {
-        return (self::restrictByProperty($restrictions['regions'] ?? NULL, $region));
+      // Match against the entity field that contains the layout.
+      if (!empty($restriction['settings']['fields'])) {
+        if (in_array($field_name, $restriction['settings']['fields'])) {
+          $match = TRUE;
+        }
+        else {
+          continue;
+        }
       }
-    );
+      // Match agains layout regions.
+      if (!empty($restriction['settings']['layout_regions'])) {
+        $matching_layout_regions = [];
+        foreach ($restriction['settings']['layout_regions'] as $layout_name => $regions) {
+          if (is_array($regions)) {
+            foreach ($regions as $region) {
+              $matching_layout_regions[] = $layout_name . ':' . $region;
+            }
+          }
+          else {
+            $matching_layout_regions[] = $layout_name . ':' . $regions;
+          }
+        }
+        if (in_array($layout_region, $matching_layout_regions)) {
+          $match = TRUE;
+        }
+        elseif (in_array($layout_plugin_id . ':' . '_all', $matching_layout_regions)) {
+          $match = TRUE;
+        }
+        else {
+          continue;
+        }
+      }
+      // Match against parent component type.
+      if (!empty($restriction['settings']['parent_component_types'])) {
+        if (in_array($parent_component_type, $restriction['settings']['parent_component_types'])) {
+          $match = TRUE;
+        }
+        else {
+          continue;
+        }
+      }
+      if ($match) {
+        $matching_restrictions[$restriction_key] = $restriction;
+      }
+    }
 
-    if ($restrictions) {
+    // Process the matching restrictions.
+    if ($matching_restrictions) {
 
       // Build a list of allowed component types from the filtered restrictions.
-      $allowed = array_reduce($restrictions, function ($carry, $item) {
-        foreach (array_keys($item['components']) as $allowed_type) {
+      $allowed = array_reduce($matching_restrictions, function ($carry, $item) {
+        foreach ($item['allow_components'] ?? [] as $allowed_type) {
           $carry[$allowed_type] = TRUE;
         }
         return $carry;
@@ -100,6 +172,38 @@ class LayoutParagraphsRestrictions implements EventSubscriberInterface {
       $event->setTypes($types);
     }
 
+  }
+
+  /**
+   * Sets the restrictions property.
+   *
+   * @param array $restrictions
+   *   The restrictions.
+   */
+  protected function setRestrictions(array $restrictions) {
+    $this->restrictions = $restrictions;
+    return $this;
+  }
+
+  /**
+   * Filters the restrictions by a property.
+   *
+   * @param string $filter_property
+   *   The property to filter by.
+   * @param string $filter_value
+   *   The value to filter by.
+   *
+   * @return \Drupal\mercury_editor_restrictions\EventSubscriber\LayoutParagraphsRestrictions
+   *   The current object.
+   */
+  protected function filterBy($filter_property, $filter_value) {
+    $this->restrictions = array_filter(
+      $this->restrictions,
+      function ($restriction) use ($filter_property, $filter_value) {
+        return (self::restrictByProperty($restriction['settings'][$filter_property] ?? NULL, $filter_value));
+      }
+    );
+    return $this;
   }
 
   /**

@@ -3,5 +3,6 @@ services:
     class: \Drupal\mercury_editor_restrictions\EventSubscriber\LayoutParagraphsRestrictions
     arguments:
       - '@messenger'
+      - '@config.factory'
     tags:
       - { name: 'event_subscriber' }
