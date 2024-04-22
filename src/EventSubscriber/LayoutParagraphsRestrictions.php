@@ -99,10 +99,10 @@ class LayoutParagraphsRestrictions implements EventSubscriberInterface {
             && $context[$restriction_context_key] == $restriction_context_value;
         }
         if ($test === TRUE) {
-          if ($restriction['components']) {
+          if (!empty($restriction['components'])) {
             $include = array_merge($include, array_fill_keys($restriction['components'], TRUE));
           }
-          if ($restriction['exclude_components']) {
+          if (!empty($restriction['exclude_components'])) {
             $exclude = array_merge($exclude, array_fill_keys($restriction['exclude_components'], TRUE));
           }
         }
