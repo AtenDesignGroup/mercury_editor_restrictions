@@ -78,17 +78,26 @@ class LayoutParagraphsRestrictions implements EventSubscriberInterface {
     $include = [];
     $exclude = [];
     foreach ($this->restrictions as $key => $restriction) {
-      [$key, $value] = explode('=', $key);
-      if (isset($context[$key]) && $context[$key] == $value) {
-        if ($restriction['components']) {
-          $include = array_merge($include, array_fill_keys($restriction['components'], TRUE));
+      foreach ($restriction['context'] as $restriction_context_key => $restriction_context_value) {
+        if (strpos($restriction_context_value, '!') === 0) {
+          $restriction_context_value = substr($restriction_context_value, 1);
+          $test = isset($context[$restriction_context_key])
+            && $context[$restriction_context_key] !== $restriction_context_value;
         }
-        if ($restriction['exclude_components']) {
-          $exclude = array_merge($exclude, array_fill_keys($restriction['exclude_components'], TRUE));
+        else {
+          $test = isset($context[$restriction_context_key])
+            && $context[$restriction_context_key] == $restriction_context_value;
+        }
+        if ($test === TRUE) {
+          if ($restriction['components']) {
+            $include = array_merge($include, array_fill_keys($restriction['components'], TRUE));
+          }
+          if ($restriction['exclude_components']) {
+            $exclude = array_merge($exclude, array_fill_keys($restriction['exclude_components'], TRUE));
+          }
         }
       }
     }
-
     if ($include) {
       $event->setTypes(array_intersect_key($event->getTypes(), $include));
     }
