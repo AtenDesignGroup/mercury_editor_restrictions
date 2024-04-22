@@ -69,8 +69,8 @@ class TransformComponentController extends ControllerBase {
     $behavior_settings = $paragraph->getAllBehaviorSettings();
     $style_options = $behavior_settings['style_options'] ?? [];
 
-    print_r($behavior_settings);
-    print($variation);
+    $variation = explode('__', $variation)[1] ?? $variation;
+
     foreach ($style_options as $key => $style_option) {
       if (!empty($style_option['component_variation'])) {
         $behavior_settings['style_options'][$key]['component_variation'] = $variation;
@@ -78,9 +78,6 @@ class TransformComponentController extends ControllerBase {
     }
 
     $paragraph->setAllBehaviorSettings($behavior_settings);
-    print_r($behavior_settings);
-    die();
-    // $paragraph->set('unserializedBehaviorSettings', $behavior_settings);
 
     $this->layoutParagraphsLayout->setComponent($paragraph);
     $this->tempstore->set($this->layoutParagraphsLayout);
