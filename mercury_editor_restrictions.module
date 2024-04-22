@@ -5,13 +5,15 @@
  * Contains Layout Paragraphs Restrictions module.
  */
 
+use Drupal\paragraphs\Entity\Paragraph;
+
 /**
  * Implements hook_preprocess_layout_paragraphs_builder().
  */
 function mercury_editor_restrictions_preprocess_layout_paragraphs_builder(&$variables) {
-  $restrictions = \Drupal::moduleHandler()->invokeAll('mercury_editor_restrictions');
+  $restrictions = \Drupal::configFactory()->get('mercury_editor_restrictions.settings')->get('restrictions');
   $layout = $variables['layout_paragraphs_layout'];
-  $variables['#attached']['drupalSettings']['lpBuilder']['restrictions'][$layout->id()] = $restrictions;
+  $variables['#attached']['drupalSettings']['lpBuilder']['restrictions'][$layout->id()] = array_values($restrictions);
   $variables['#attached']['library'][] = 'mercury_editor_restrictions/restrictions';
 }
 
@@ -20,6 +22,14 @@ function mercury_editor_restrictions_preprocess_layout_paragraphs_builder(&$vari
  */
 function mercury_editor_restrictions_preprocess_paragraph(&$variables) {
   if (!empty($variables['paragraph']->_layoutParagraphsBuilder)) {
-    $variables['attributes']['data-component-type'] = $variables['paragraph']->bundle();
+    /** @var Paragraph $paragraph */
+    $paragraph = $variables['paragraph'];
+    $variables['attributes']['data-me-component-type'] = $paragraph->bundle();
+    $behaviorSettings = $paragraph->getAllBehaviorSettings();
+    foreach ($behaviorSettings['style_options'] ?? [] as $style_option) {
+      if (!empty($style_option['component_variation'])) {
+        $variables['attributes']['data-me-component-type'] .= '__' . $style_option['component_variation'];
+      }
+    }
   }
 }

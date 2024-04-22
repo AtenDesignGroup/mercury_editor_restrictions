@@ -55,6 +55,16 @@ class LayoutParagraphsRestrictions implements EventSubscriberInterface {
   /**
    * Restricts available types based on settings in layout.
    *
+   * The current context will have the following possible key/value pairs:
+   *
+   * - parent_uuid: The UUID of the parent component.
+   * - parent_type: The bundle of the parent component.
+   * - sibling_uuid: The UUID of the sibling component.
+   * - sibling_type: The bundle of the sibling component.
+   * - region: The region name (_root if no region is set).
+   * - layout: The layout plugin ID.
+   * - placement: The placement of the component (before or after).
+   *
    * @param \Drupal\layout_paragraphs\Event\LayoutParagraphsAllowedTypesEvent $event
    *   The allowed types event.
    */
@@ -77,7 +87,7 @@ class LayoutParagraphsRestrictions implements EventSubscriberInterface {
 
     $include = [];
     $exclude = [];
-    foreach ($this->restrictions as $key => $restriction) {
+    foreach ($this->restrictions as $restriction) {
       foreach ($restriction['context'] as $restriction_context_key => $restriction_context_value) {
         if (strpos($restriction_context_value, '!') === 0) {
           $restriction_context_value = substr($restriction_context_value, 1);

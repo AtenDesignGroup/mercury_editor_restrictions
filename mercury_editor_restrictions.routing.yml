@@ -1,3 +1,14 @@
+mercury_editor_restrictions.builder.transform_item:
+  path: '/mercury-editor-restrictions/transform/{layout_paragraphs_layout}/{component_uuid}/{variation}'
+  defaults:
+    _controller: '\Drupal\mercury_editor_restrictions\Controller\TransformComponentController::transform'
+  options:
+    parameters:
+      layout_paragraphs_layout:
+        layout_paragraphs_layout_tempstore: TRUE
+  requirements:
+    _layout_paragraphs_builder_access: 'TRUE'
+
 mercury_editor_restrictions.settings:
   path: '/admin/config/content/mercury-editor/restrictions'
   defaults:
