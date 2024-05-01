@@ -71,24 +71,7 @@
               const appliedRestrictions = applicableRestrictions(allRestrictions, moveContext);
 
               // Build a list of transformations that apply.
-              const type = el.getAttribute('data-me-component-type');
-              const transformation = appliedRestrictions.find((restriction) => {
-                if (restriction.transform) {
-                  for (let src in restriction.transform) {
-                    if (src.indexOf('*')) {
-                      if (type.indexOf(src.replace('*', '')) === 0) {
-                        return restriction.transform[src];
-                      }
-                    }
-                    else {
-                      if (type === src) {
-                        return restriction.transform[src];
-                      }
-                    }
-                  }
-                }
-              });
-
+              const type = el.getAttribute('data-me-component-type') || [];
               // Build an exclude list from restrictions that apply.
               const exclude = appliedRestrictions.reduce((exclude, restriction) => {
                 return [...exclude, ...restriction.exclude_components || []];
@@ -121,11 +104,8 @@
               const include = appliedRestrictions.reduce((include, restriction) => {
                 return [...include, ...restriction.components || []];
               }, []);
-              console.log(transformations);
               if (transformations.length > 0) {
-                console.log('Apply transformation');
                 el.setAttribute('data-me-transform', transformations[0]);
-                console.log(el);
                 return;
               }
 
