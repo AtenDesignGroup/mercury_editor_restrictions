@@ -35,23 +35,24 @@
     });
   }
 
-  $(document).on('lpb-component:move lpb-component:drop', (e, uuid) => {
-    setTimeout(() => {
-      const el = document.querySelector(`[data-me-transform]`);
-      if (!el) {
-        return;
-      }
-      const layoutId = el.closest('[data-lpb-id]').getAttribute('data-lpb-id');
-      const transform = el.getAttribute('data-me-transform');
-      if (!transform) {
-        return;
-      }
-      Drupal.ajax({
-        url: `${drupalSettings.path.baseUrl}${drupalSettings.path.pathPrefix}mercury-editor-restrictions/transform/${layoutId}/${uuid}/${transform}`,
-      }).execute();
+  // @Todo - evaluate if this code is causing save issues.
+  // $(document).on('lpb-component:move lpb-component:drop', (e, uuid) => {
+  //   setTimeout(() => {
+  //     const el = document.querySelector(`[data-me-transform]`);
+  //     if (!el) {
+  //       return;
+  //     }
+  //     const layoutId = el.closest('[data-lpb-id]').getAttribute('data-lpb-id');
+  //     const transform = el.getAttribute('data-me-transform');
+  //     if (!transform) {
+  //       return;
+  //     }
+  //     Drupal.ajax({
+  //       url: `${drupalSettings.path.baseUrl}${drupalSettings.path.pathPrefix}mercury-editor-restrictions/transform/${layoutId}/${uuid}/${transform}`,
+  //     }).execute();
 
-    }, 100);
-  });
+  //   }, 100);
+  // });
 
   Drupal.behaviors.layoutParagraphsRestrictions = {
     attach: function attach(context, settings) {
